@@ -30,7 +30,7 @@ class App{
         const material = new THREE.MeshStandardMaterial( { color: 0xFF0000 });
 
         this.mesh = new THREE.Mesh( geometry, material );
-        this.mesh.position.set( 0, 0, 4);
+        this.mesh.position.set( 0, 0, -4);
         this.scene.add(this.mesh);
         
         const controls = new OrbitControls( this.camera, this.renderer.domElement );
