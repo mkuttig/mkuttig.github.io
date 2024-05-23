@@ -1,4 +1,5 @@
 import * as THREE from './libs/three/three.module.js';
+import { VRButton } from './libs/three/jsm/VRButton.js'
 import { OrbitControls } from './libs/three/jsm/OrbitControls.js';
 
 class App{
@@ -24,7 +25,6 @@ class App{
 		this.renderer.setSize( window.innerWidth, window.innerHeight );
 		container.appendChild( this.renderer.domElement );
 		
-        //Replace Box with Circle, Cone, Cylinder, Dodecahedron, Icosahedron, Octahedron, Plane, Sphere, Tetrahedron, Torus or TorusKnot
         const geometry = new THREE.BoxBufferGeometry(); 
         
         const material = new THREE.MeshStandardMaterial( { color: 0xFF0000 });
@@ -40,7 +40,12 @@ class App{
         window.addEventListener('resize', this.resize.bind(this) );
 	}	
     
-    resize(){
+	setupVR() {
+		this.renderer.xr.enabled = true;
+		document.body.appendChild(VRButton.createButton(this.renderer));
+	}
+
+    resize() {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize( window.innerWidth, window.innerHeight );  
