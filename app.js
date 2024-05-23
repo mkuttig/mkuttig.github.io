@@ -8,7 +8,7 @@ class App{
 		document.body.appendChild( container );
         
 		this.camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 100 );
-		this.camera.position.set( 0, 0, 4 );
+		this.camera.position.set( 0, 0, 0 );
         
 		this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color( 0xaaaaaa );
@@ -30,7 +30,7 @@ class App{
         const material = new THREE.MeshStandardMaterial( { color: 0xFF0000 });
 
         this.mesh = new THREE.Mesh( geometry, material );
-        
+        this.mesh.position.set( 0, 0, 4);
         this.scene.add(this.mesh);
         
         const controls = new OrbitControls( this.camera, this.renderer.domElement );
@@ -44,6 +44,7 @@ class App{
     
 	setupVR() {
 		this.renderer.xr.enabled = true;
+		
 		document.body.appendChild(VRButton.createButton(this.renderer));
 	}
 
