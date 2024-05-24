@@ -27,7 +27,7 @@ class App{
 		
         const geometry = new THREE.BoxBufferGeometry(); 
         
-        const material = new THREE.MeshStandardMaterial( { color: 0x00FF00 });
+        const material = new THREE.MeshStandardMaterial( { color: 0x00FFFF });
 
         this.mesh = new THREE.Mesh( geometry, material );
         this.mesh.position.set( 0, 0, -4);
