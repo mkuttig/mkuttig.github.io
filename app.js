@@ -1,10 +1,13 @@
 import * as THREE from './libs/three/three.module.js';
 import { VRButton } from './libs/three/jsm/VRButton.js'
 import { OrbitControls } from './libs/three/jsm/OrbitControls.js';
+import { XRControllerModelFactory } from './libs/three/jsm/XRControllerModelFactory.js';
 
 class App{
-	constructor(){
-		const container = document.createElement( 'div' );
+	
+    constructor(){
+		
+        const container = document.createElement( 'div' );
 		document.body.appendChild( container );
         
 		this.camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 100 );
@@ -27,7 +30,7 @@ class App{
 		
         const geometry = new THREE.BoxBufferGeometry(); 
         
-        const material = new THREE.MeshStandardMaterial( { color: 0xFF00FF });
+        const material = new THREE.MeshStandardMaterial( { color: 0xFF0000 });
 
         this.mesh = new THREE.Mesh( geometry, material );
         this.mesh.position.set( 0, 0, -4);
@@ -44,9 +47,30 @@ class App{
     
 	setupVR() {
 		this.renderer.xr.enabled = true;
-		
 		document.body.appendChild(VRButton.createButton(this.renderer));
-	}
+        this.controllers = this.buildControllers();
+    }
+
+    buildControllers() {
+        const controllerModelFactory = new XRControllerModelFactory();
+        const geometry = new THREE.BufferGeometry().setFromPoints([ new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-1) ]);
+        const controllers = [];
+
+        for (let i=0;i<=1;i++) {
+
+            const controller = this.renderer.xr.getController(i);            
+            controllers.push(controller);
+            this.scene.add(controller);
+
+            const grip = this.renderer.xr.getControllerGrip(i);
+            grip.add(controllerModelFactory.createControllerModel(grip));
+            this.scene.add(grip);
+        }
+
+        return controllers;
+    }
+
+
 
     resize() {
         this.camera.aspect = window.innerWidth / window.innerHeight;
