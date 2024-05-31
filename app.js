@@ -22,28 +22,34 @@ class App{
         const light = new THREE.DirectionalLight();
         light.position.set( 0.2, 1, 1);
         this.scene.add(light);
-			
+
+        const geometry = new THREE.BoxBufferGeometry();
+        const material = new THREE.MeshStandardMaterial( { color: 0xFF0000 });
+        this.mesh = new THREE.Mesh( geometry, material );
+        this.mesh.position.set( 0, 0, -4);
+        this.scene.add(this.mesh);
+
+        this.room = new THREE.LineSegments(new BoxLineGeometry(6,6,6,10,10,10),
+                                           new THREE.LineBasicMaterial( {color: 0x000000 }));
+        this.room.geometry.translate(0,3,0);
+        this.scene.add(room);
+
 		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true } );
 		this.renderer.setPixelRatio( window.devicePixelRatio );
 		this.renderer.setSize( window.innerWidth, window.innerHeight );
 		container.appendChild( this.renderer.domElement );
-		
-        const geometry = new THREE.BoxBufferGeometry(); 
-        
-        const material = new THREE.MeshStandardMaterial( { color: 0xFF0000 });
 
-        this.mesh = new THREE.Mesh( geometry, material );
-        this.mesh.position.set( 0, 0, -4);
-        this.scene.add(this.mesh);
-        
+
         const controls = new OrbitControls( this.camera, this.renderer.domElement );
         
-		this.setupVR();
+
+        this.setupVR();
 
         this.renderer.setAnimationLoop(this.render.bind(this));
-    
+   
         window.addEventListener('resize', this.resize.bind(this) );
-	}	
+
+    }	
     
 	setupVR() {
 		this.renderer.xr.enabled = true;
