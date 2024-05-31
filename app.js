@@ -4,6 +4,7 @@ import { BoxLineGeometry } from './libs/three/jsm/BoxLineGeometry.js';
 import { VRButton } from './libs/three/jsm/VRButton.js'
 import { OrbitControls } from './libs/three/jsm/OrbitControls.js';
 import { XRControllerModelFactory } from './libs/three/jsm/XRControllerModelFactory.js';
+import { RGBELoader } from '../../libs/three/jsm/RGBELoader.js';
 
 class App{
 	
