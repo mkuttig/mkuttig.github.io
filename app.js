@@ -47,7 +47,7 @@ class App{
 
         const self = this;
         const loader = new GLTFLoader().setPath( './assets/');
-        loader.load('chair.glb',
+        loader.load('bell.glb',
                     function(gltf) {
                         self.bell = gltf.scene;
                         self.bell.position.set(0,0,-4);
