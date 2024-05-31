@@ -30,9 +30,9 @@ class App{
         this.mesh.position.set( 0, 0, -4);
         this.scene.add(this.mesh);
 
-        this.room = new THREE.LineSegments(new BoxLineGeometry(6,6,6,10,10,10),
+        this.room = new THREE.LineSegments(new BoxLineGeometry(20,20,20,30,30,30),
                                            new THREE.LineBasicMaterial( {color: 0x000000 }));
-        this.room.geometry.translate(0,3,0);
+        this.room.geometry.translate(0,18,0);
         this.scene.add(this.room);
 
 		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true } );
