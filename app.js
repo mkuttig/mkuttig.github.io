@@ -1,4 +1,5 @@
 import * as THREE from './libs/three/three.module.js';
+import { GLTFLoader } from './libs/three/jsm/GLTFLoader.js';    
 import { BoxLineGeometry } from './libs/three/jsm/BoxLineGeometry.js';
 import { VRButton } from './libs/three/jsm/VRButton.js'
 import { OrbitControls } from './libs/three/jsm/OrbitControls.js';
@@ -32,8 +33,20 @@ class App{
 
         this.room = new THREE.LineSegments(new BoxLineGeometry(20,20,20,30,30,30),
                                            new THREE.LineBasicMaterial( {color: 0x202020 }));
-        this.room.geometry.translate(0,0,0);
+        this.room.geometry.translate( 0, 8.4, 0);
         this.scene.add(this.room);
+
+        this.loadingbar = new Loadingbar();
+        const loader = new GLTFLoader().setPath('./assets/');
+        loader.load('bell.glb',
+                    function(gltf) {
+                        this.bell = gltf.scene;
+                        this.scene.add(gltf.scene);
+                    },
+                    function(xhr) {},
+                    function(err) {
+                        console.log('Error loading bell.glb');
+                    } );
 
 		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true } );
 		this.renderer.setPixelRatio( window.devicePixelRatio );
