@@ -44,12 +44,13 @@ class App{
         this.room.geometry.translate( 0, 8.4, 0);
         this.scene.add(this.room);
 
+        const self = this;
         const loader = new GLTFLoader().setPath( './assets/');
         loader.load('chair.glb',
                     function(gltf) {
-                        this.bell = gltf.scene;
-                        this.bell.position.set(0,0,-4);
-                        this.scene.add(gltf.scene);
+                        self.bell = gltf.scene;
+                        self.bell.position.set(0,0,-4);
+                        self.scene.add(gltf.scene);
                     },
                     function(xhr) {},
                     function(err) {
