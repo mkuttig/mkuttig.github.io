@@ -11,7 +11,12 @@ class App{
 		
         const container = document.createElement( 'div' );
 		document.body.appendChild( container );
-        
+   
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true } );
+		this.renderer.setPixelRatio( window.devicePixelRatio );
+		this.renderer.setSize( window.innerWidth, window.innerHeight );
+		container.appendChild( this.renderer.domElement );
+
 		this.camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 100 );
 		this.camera.position.set( 0, 0, 0 );
         
@@ -48,11 +53,6 @@ class App{
                         console.log('Error loading bell.glb');
                         console.log(err);
                     } );
-
-		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true } );
-		this.renderer.setPixelRatio( window.devicePixelRatio );
-		this.renderer.setSize( window.innerWidth, window.innerHeight );
-		container.appendChild( this.renderer.domElement );
 
         const controls = new OrbitControls( this.camera, this.renderer.domElement );
         
