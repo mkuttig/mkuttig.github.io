@@ -46,6 +46,7 @@ class App{
                     function(xhr) {},
                     function(err) {
                         console.log('Error loading bell.glb');
+                        console.log(err);
                     } );
 
 		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true } );
