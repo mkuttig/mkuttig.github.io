@@ -36,7 +36,7 @@ class App{
         this.room.geometry.translate( 0, 8.4, 0);
         this.scene.add(this.room);
 
-        const loader = new GLTFLoader().setPath('./assets/');
+        const loader = new GLTFLoader().setPath( './assets/');
         loader.load('bell.glb',
                     function(gltf) {
                         this.bell = gltf.scene;
