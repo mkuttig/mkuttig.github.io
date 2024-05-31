@@ -50,7 +50,7 @@ class App{
         loader.load('bell.glb',
                     function(gltf) {
                         self.bell = gltf.scene;
-                        self.bell.position.set(0,0,-4);
+                        self.bell.position.set( 0, 10, -1);
                         self.scene.add(gltf.scene);
                     },
                     function(xhr) {},
