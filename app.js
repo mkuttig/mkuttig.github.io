@@ -2,7 +2,7 @@ import * as THREE from './libs/three/three.module.js';
 
 import { OrbitControls } from './libs/three/jsm/OrbitControls.js';
 import { GLTFLoader } from './libs/three/jsm/GLTFLoader.js';    
-import { RGBELoader } from '../../libs/three/jsm/RGBELoader.js';
+import { RGBELoader } from './libs/three/jsm/RGBELoader.js';
 import { BoxLineGeometry } from './libs/three/jsm/BoxLineGeometry.js';
 
 import { VRButton } from './libs/three/jsm/VRButton.js'
