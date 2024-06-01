@@ -121,7 +121,7 @@ class App{
     handelControllerInput() {
         const session = this.renderer.xr.gerSession();
         const self = this;
-
+/*
         if (session) {
             const inputSources = session.inputSources;
             inputSources.forEach(inputSource => {
@@ -132,6 +132,7 @@ class App{
                 }
             });
         }
+*/
     }
 
 
