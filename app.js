@@ -36,13 +36,13 @@ class App{
         const light = new THREE.DirectionalLight();
         light.position.set( 0.2, 1, 1);
         this.scene.add(light);
-/*
+
         const geometry = new THREE.BoxBufferGeometry();
         const material = new THREE.MeshStandardMaterial( { color: 0xFF0000 });
         this.mesh = new THREE.Mesh( geometry, material );
         this.mesh.position.set( 0, 0, -4);
         this.scene.add(this.mesh);
-*/
+
         this.room = new THREE.LineSegments(new BoxLineGeometry(20,20,20,30,30,30),
                                            new THREE.LineBasicMaterial( {color: 0x202020 }));
         this.room.geometry.translate( 0, 8.4, 0);
@@ -127,7 +127,7 @@ class App{
                 if (inputSource.gamepad) {
                     const gamepad = inputSource.gamepad;
                     const axes = gamepad.axes;
-                    this.bell.translate.set(axes[0].axes[1],0);
+                    this.bell.position.set(axes[0].axes[1],-3);
                 }
             });
         }
