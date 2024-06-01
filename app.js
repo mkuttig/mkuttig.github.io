@@ -7,7 +7,6 @@ import { BoxLineGeometry } from './libs/three/jsm/BoxLineGeometry.js';
 
 import { VRButton } from './libs/three/jsm/VRButton.js'
 import { XRControllerModelFactory } from './libs/three/jsm/XRControllerModelFactory.js';
-import { MotionController } from './libs/three/jsm/motion-controllers.module.js' 
 
 class App{
 	
