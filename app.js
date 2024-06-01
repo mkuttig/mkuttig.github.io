@@ -123,7 +123,7 @@ class App{
         const self = this;
 
         if (session) {
-            const inputSource = session.inputSources;
+            const inputSources = session.inputSources;
             inputSources.forEach(inputSource => {
                 if (inputSource.gamepad) {
                     const gamepad = inputSource.gamepad;
