@@ -1,10 +1,13 @@
 import * as THREE from './libs/three/three.module.js';
-import { GLTFLoader } from './libs/three/jsm/GLTFLoader.js';    
-import { BoxLineGeometry } from './libs/three/jsm/BoxLineGeometry.js';
-import { VRButton } from './libs/three/jsm/VRButton.js'
+
 import { OrbitControls } from './libs/three/jsm/OrbitControls.js';
-import { XRControllerModelFactory } from './libs/three/jsm/XRControllerModelFactory.js';
+import { GLTFLoader } from './libs/three/jsm/GLTFLoader.js';    
 import { RGBELoader } from '../../libs/three/jsm/RGBELoader.js';
+import { BoxLineGeometry } from './libs/three/jsm/BoxLineGeometry.js';
+
+import { VRButton } from './libs/three/jsm/VRButton.js'
+import { XRControllerModelFactory } from './libs/three/jsm/XRControllerModelFactory.js';
+import { MotionController } from './libs/three/jsm/motion-controllers.module.js' 
 
 class App{
 	
@@ -110,9 +113,27 @@ class App{
     }
     
 	render( ) {   
+        this.handelControllerInput();
         // this.mesh.rotateY( 0.01 );
         this.renderer.render( this.scene, this.camera );
     }
+
+    handelControllerInput() {
+        const session = this.renderer.xr.gerSession();
+
+        if (session) {
+            const inputSource = session.inputSources;
+            inputSources.forEach(inputSource => {
+                if (inputSource.gamepad) {
+                    const gamepad = inputSource.gamepad;
+                    const axes = gamepad.axes;
+                    this.bell.translate.set(axes[0].axes[1],0);
+                }
+            });
+        }
+    }
+
+
 }
 
 export { App };
