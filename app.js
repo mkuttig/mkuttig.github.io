@@ -120,6 +120,7 @@ class App{
 
     handelControllerInput() {
         const session = this.renderer.xr.gerSession();
+        const self = this;
 
         if (session) {
             const inputSource = session.inputSources;
@@ -127,7 +128,7 @@ class App{
                 if (inputSource.gamepad) {
                     const gamepad = inputSource.gamepad;
                     const axes = gamepad.axes;
-                    this.bell.position.set(axes[0].axes[1],-3);
+                    self.bell.position.set(axes[0].axes[1],-3);
                 }
             });
         }
