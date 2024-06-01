@@ -7,7 +7,7 @@ import { XRControllerModelFactory } from './libs/three/jsm/XRControllerModelFact
 import { RGBELoader } from '../../libs/three/jsm/RGBELoader.js';
 
 class App{
-	
+    
     constructor(){
 		
         const container = document.createElement( 'div' );
@@ -19,7 +19,8 @@ class App{
 		this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.renderer.physicallyCorrectLights = true;
         container.appendChild( this.renderer.domElement );
-		this.setEnvironment();
+	
+        this.setEnvironment();
 
 		this.camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 100 );
 		this.camera.position.set( 0, 0, 0 );
