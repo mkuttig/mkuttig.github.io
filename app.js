@@ -1,8 +1,11 @@
 import * as THREE from './libs/three/three.module.js';
-import { GLTFLoader } from './libs/three/jsm/GLTFLoader.js';    
-import { BoxLineGeometry } from './libs/three/jsm/BoxLineGeometry.js';
-import { VRButton } from './libs/three/jsm/VRButton.js'
+
 import { OrbitControls } from './libs/three/jsm/OrbitControls.js';
+import { GLTFLoader } from './libs/three/jsm/GLTFLoader.js';    
+import { RGBELoader } from './libs/three/jsm/RGBELoader.js';
+import { BoxLineGeometry } from './libs/three/jsm/BoxLineGeometry.js';
+
+import { VRButton } from './libs/three/jsm/VRButton.js'
 import { XRControllerModelFactory } from './libs/three/jsm/XRControllerModelFactory.js';
 import { RGBELoader } from './libs/three/jsm/RGBELoader.js';
 
@@ -43,7 +46,13 @@ class App{
         const light = new THREE.DirectionalLight();
         light.position.set( 0.2, 1, 1);
         this.scene.add(light);
-
+/*
+        const geometry = new THREE.BoxBufferGeometry();
+        const material = new THREE.MeshStandardMaterial( { color: 0xFF0000 });
+        this.mesh = new THREE.Mesh( geometry, material );
+        this.mesh.position.set( 0, 0, -4);
+        this.scene.add(this.mesh);
+*/
         this.room = new THREE.LineSegments(new BoxLineGeometry(20,20,20,30,30,30),
                                            new THREE.LineBasicMaterial( {color: 0x202020 }));
         this.room.geometry.translate( 0, 8.4, 0);
@@ -113,31 +122,9 @@ class App{
         this.renderer.setSize( window.innerWidth, window.innerHeight );  
     }
     
-	render( ) {
-        this.handelControllerInput();
-
-        this.heli_x += this.joy2_y / 5.0;
-        this.heli_y += this.joy2_x / 5.0;
-        this.heli_z += this.joy1_y / 5.0;
-        if (this.bell)
-            this.bell.position.set( this.heli_x, this.heli_y, this.heli_z);
-
+	render( ) {   
+        // this.mesh.rotateY( 0.01 );
         this.renderer.render( this.scene, this.camera );
-    }
-
-    handelControllerInput() {
-        const session = this.renderer.xr.getSession();
-        if (session) {
-            const inputSources = session.inputSources;
-            for (const inputSource of inputSources) {
-                if (inputSource.gamepad) {
-                    this.joy1_x = inputSource.gamepad.axes[0];
-                    this.joy1_y = inputSource.gamepad.axes[1];
-                    this.joy2_x = inputSource.gamepad.axes[2];
-                    this.joy2_y = inputSource.gamepad.axes[3];
-                }
-            }
-        }
     }
 }
 
