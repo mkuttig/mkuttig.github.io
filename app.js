@@ -119,12 +119,16 @@ class App{
 	render( ) {
         this.handelControllerInput();
 
-        this.heli_x += this.joy2_y / 5.0;
-        this.heli_y += this.joy2_x / 5.0;
-        this.heli_z += this.joy1_y / 5.0;
-        if (this.bell)
-            this.bell.position.set( this.heli_x, this.heli_y, this.heli_z);
-
+        // Heli physics
+        this.heli_x =  this.joy2_x;
+        this.heli_z =  this.joy2_y;
+        this.heli_y = -this.joy1_y;
+        
+        if (this.bell) {
+            this.bell.rotateY(this.joy1_x);
+            this.bell.position.set( this.heli_x, this.heli_y, this.heli_z);            
+        }
+            
         this.renderer.render( this.scene, this.camera );
     }
 
@@ -134,10 +138,14 @@ class App{
             const inputSources = session.inputSources;
             for (const inputSource of inputSources) {
                 if (inputSource.gamepad) {
-                    this.joy1_x = inputSource.gamepad.axes[0];
-                    this.joy1_y = inputSource.gamepad.axes[1];
-                    this.joy2_x = inputSource.gamepad.axes[2];
-                    this.joy2_y = inputSource.gamepad.axes[3];
+                    if (inputSource.handedness == 'left') {
+                        this.joy1_x = inputSource.gamepad.axes[2];
+                        this.joy1_y = inputSource.gamepad.axes[3];
+                    }
+                    if (inputSource.handedness == 'right') {
+                        this.joy2_x = inputSource.gamepad.axes[2];
+                        this.joy2_y = inputSource.gamepad.axes[3];
+                    }
                 }
             }
         }
