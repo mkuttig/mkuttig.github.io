@@ -4,12 +4,21 @@ import { BoxLineGeometry } from './libs/three/jsm/BoxLineGeometry.js';
 import { VRButton } from './libs/three/jsm/VRButton.js'
 import { OrbitControls } from './libs/three/jsm/OrbitControls.js';
 import { XRControllerModelFactory } from './libs/three/jsm/XRControllerModelFactory.js';
-import { RGBELoader } from '../../libs/three/jsm/RGBELoader.js';
+import { RGBELoader } from './libs/three/jsm/RGBELoader.js';
 
 class App{
     
     constructor(){
-		
+	
+        this.heli_x =  0.0;
+        this.heli_y =  0.0;
+        this.heli_z = -3.0;
+        
+        this.joy1_x =  0.0;
+        this.joy1_y =  0.0;
+        this.joy2_x =  0.0;
+        this.joy2_y =  0.0;
+        
         const container = document.createElement( 'div' );
 		document.body.appendChild( container );
    
@@ -34,13 +43,7 @@ class App{
         const light = new THREE.DirectionalLight();
         light.position.set( 0.2, 1, 1);
         this.scene.add(light);
-/*
-        const geometry = new THREE.BoxBufferGeometry();
-        const material = new THREE.MeshStandardMaterial( { color: 0xFF0000 });
-        this.mesh = new THREE.Mesh( geometry, material );
-        this.mesh.position.set( 0, 0, -4);
-        this.scene.add(this.mesh);
-*/
+
         this.room = new THREE.LineSegments(new BoxLineGeometry(20,20,20,30,30,30),
                                            new THREE.LineBasicMaterial( {color: 0x202020 }));
         this.room.geometry.translate( 0, 8.4, 0);
@@ -52,7 +55,7 @@ class App{
                     function(gltf) {
                         self.bell = gltf.scene;
                         self.bell.scale.set( 0.1, 0.1, 0.1);
-                        self.bell.position.set( 0, 0, -3);
+                        self.bell.position.set( self.heli_x, self.heli_y, self.heli_z);
 
                         self.scene.add(gltf.scene);
                     },
@@ -110,9 +113,31 @@ class App{
         this.renderer.setSize( window.innerWidth, window.innerHeight );  
     }
     
-	render( ) {   
-        // this.mesh.rotateY( 0.01 );
+	render( ) {
+        this.handelControllerInput();
+
+        this.heli_x += this.joy2_y / 5.0;
+        this.heli_y += this.joy2_x / 5.0;
+        this.heli_z += this.joy1_y / 5.0;
+        if (this.bell)
+            this.bell.position.set( this.heli_x, this.heli_y, this.heli_z);
+
         this.renderer.render( this.scene, this.camera );
+    }
+
+    handelControllerInput() {
+        const session = this.renderer.xr.getSession();
+        if (session) {
+            const inputSources = session.inputSources;
+            for (const inputSource of inputSources) {
+                if (inputSource.gamepad) {
+                    this.joy1_x = inputSource.gamepad.axes[0];
+                    this.joy1_y = inputSource.gamepad.axes[1];
+                    this.joy2_x = inputSource.gamepad.axes[2];
+                    this.joy2_y = inputSource.gamepad.axes[3];
+                }
+            }
+        }
     }
 }
 
