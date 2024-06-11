@@ -33,7 +33,7 @@ class App{
         container.appendChild( this.renderer.domElement );
 	       
 		this.camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 100 );
-		this.camera.position.set( 0, 0, 0 );
+		this.camera.position.set( 0, 1.6, 0 );
         
 		this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color( 0xaaaaaa );
