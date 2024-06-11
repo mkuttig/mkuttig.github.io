@@ -14,8 +14,8 @@ class App{
     constructor(){
 	
         this.heli_x =  0.0;
-        this.heli_y =  0.0;
-        this.heli_z =  1.0;
+        this.heli_y =  1.0;
+        this.heli_z =  0.0;
         
         this.joy1_x =  0.0;
         this.joy1_y =  0.0;
@@ -60,7 +60,7 @@ class App{
                     function(gltf) {
                         self.bell = gltf.scene;
                         self.bell.scale.set( 0.1, 0.1, 0.1);
-                        self.bell.position.set( 0, 1, 0);
+                        self.bell.position.set( self.heli_x, self.heli_y, self.heli_z);
                         self.scene.add(self.bell);
                     },
                     function(xhr) {},
