@@ -60,7 +60,7 @@ class App{
                     function(gltf) {
                         self.bell = gltf.scene;
                         self.bell.scale.set( 0.1, 0.1, 0.1);
-                        self.bell.position.set( 0, 0, 0);
+                        self.bell.position.set( 0, 1, 0);
                         self.scene.add(gltf.scene);
                     },
                     function(xhr) {},
