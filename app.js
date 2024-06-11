@@ -14,7 +14,7 @@ class App{
     constructor(){
 	
         
-        this.gravity = -0.8;
+        this.gravity = -1.0;
 
         this.heli_x =  0.0;
         this.heli_y =  2.0;
