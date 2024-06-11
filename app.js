@@ -25,6 +25,8 @@ class App{
         const container = document.createElement( 'div' );
 		document.body.appendChild( container );
    
+        this.clock = new THREE.Clock();
+
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true } );
 		this.renderer.setPixelRatio( window.devicePixelRatio );
 		this.renderer.setSize( window.innerWidth, window.innerHeight );
