@@ -49,7 +49,7 @@ class App{
 
         this.room = new THREE.LineSegments(new BoxLineGeometry(20,20,20,20,20,20),
                                            new THREE.LineBasicMaterial( {color: 0x202020 }));
-        this.room.postion.set( 0, 10, 0);
+        this.room.position.set( 0, 10, 0);
         this.scene.add(this.room);
 
         const self = this;
@@ -119,6 +119,8 @@ class App{
         this.handelControllerInput();
 
         // Heli physics
+        const dt = this.clock.getDelta();
+
         this.heli_x =  this.joy2_x;
         this.heli_z =  this.joy2_y;
         this.heli_y = -this.joy1_y;
