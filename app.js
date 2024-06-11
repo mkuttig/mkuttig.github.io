@@ -149,12 +149,12 @@ class App {
             for (const inputSource of inputSources) {
                 if (inputSource.gamepad) {
                     if (inputSource.handedness == 'left') {
-                        this.joy1_x = inputSource.gamepad.axes[2];
+                        this.joy1_x = inputSource.gamepad.axes[2] * 0.005;
                         this.joy1_y = inputSource.gamepad.axes[3] * 0.005;
                     }
                     if (inputSource.handedness == 'right') {
-                        this.joy2_x = inputSource.gamepad.axes[2];
-                        this.joy2_y = inputSource.gamepad.axes[3];
+                        this.joy2_x = inputSource.gamepad.axes[2] * 0.005;
+                        this.joy2_y = inputSource.gamepad.axes[3] * 0.005;
                     }
                 }
             }
