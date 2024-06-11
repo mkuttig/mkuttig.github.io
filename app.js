@@ -60,7 +60,6 @@ class App{
                     function(gltf) {
                         self.bell = gltf.scene;
                         self.bell.scale.set( 0.1, 0.1, 0.1);
-                        self.bell.position.set( self.heli_x, self.heli_y, self.heli_z);
                         self.scene.add(self.bell);
                     },
                     function(xhr) {},
@@ -131,7 +130,9 @@ class App{
             //this.bell.rotateY(this.joy1_x);
             //this.bell.position.set( this.heli_x, this.heli_y, this.heli_z);            
         }
-            
+        
+        this.bell.position.set( this.heli_x, this.heli_y, this.heli_z);
+
         this.renderer.render( this.scene, this.camera );
     }
 
