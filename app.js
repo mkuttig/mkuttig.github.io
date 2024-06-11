@@ -13,6 +13,9 @@ class App{
     
     constructor(){
 	
+        
+        this.gravity = -0.01;
+
         this.heli_x =  0.0;
         this.heli_y =  2.0;
         this.heli_z =  0.0;
@@ -126,6 +129,9 @@ class App{
         // this.heli_z =  this.joy2_y;
         // this.heli_y = -this.joy1_y;
         
+        this.heli_y = this.heli_y + this.gravity + (-this.joy1_y);
+
+
         if (this.bell) {
             //this.bell.rotateY(this.joy1_x);
             //this.bell.position.set( this.heli_x, this.heli_y, this.heli_z);            
