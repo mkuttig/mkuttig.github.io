@@ -129,8 +129,8 @@ class App{
         // this.heli_z =  this.joy2_y;
         // this.heli_y = -this.joy1_y;
         
-        this.heli_y = this.heli_y + this.gravity + (-this.joy1_y);
-
+        this.heli_y = this.heli_y + this.gravity * dt + (-this.joy1_y);
+        if (this.heli_y < 0.20) this.heli_y = 0.20;
 
         if (this.bell) {
             //this.bell.rotateY(this.joy1_x);
