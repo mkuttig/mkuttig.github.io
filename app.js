@@ -130,7 +130,7 @@ class App{
         // this.heli_y = -this.joy1_y;
         
         this.heli_y = this.heli_y + this.gravity * dt + (-this.joy1_y);
-        if (this.heli_y < 0.60) this.heli_y = 0.60;
+        if (this.heli_y < 0.55) this.heli_y = 0.55;
 
         if (this.bell) {
             //this.bell.rotateY(this.joy1_x);
