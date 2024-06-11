@@ -44,8 +44,21 @@ class App{
         this.scene.background = new THREE.Color( 0xaaaaaa );
 
         this.setEnvironment();
+        
+        const controls = new OrbitControls( this.camera, this.renderer.domElement );
 
-		const ambient = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 0.3);
+        this.setupVR();
+
+        this.renderer.setAnimationLoop(this.render.bind(this));
+   
+        window.addEventListener('resize', this.resize.bind(this) );
+
+    }	
+    
+    setEnvironment(){
+        //const rgb_loader = new RGBELoader().setDataType( THREE.UnsignedByteType ); 
+        
+        const ambient = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 0.3);
 		this.scene.add(ambient);
         
         const light = new THREE.DirectionalLight();
@@ -70,19 +83,7 @@ class App{
                         console.log('Error loading bell.glb');
                         console.log(err);
                     } );
-
-        const controls = new OrbitControls( this.camera, this.renderer.domElement );
         
-        this.setupVR();
-
-        this.renderer.setAnimationLoop(this.render.bind(this));
-   
-        window.addEventListener('resize', this.resize.bind(this) );
-
-    }	
-    
-    setEnvironment(){
-        const loader = new RGBELoader().setDataType( THREE.UnsignedByteType );        
     }
 
 
