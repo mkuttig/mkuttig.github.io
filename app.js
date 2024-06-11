@@ -15,7 +15,7 @@ class App{
 	
         this.heli_x =  0.0;
         this.heli_y =  0.0;
-        this.heli_z =  0.0;
+        this.heli_z =  1.0;
         
         this.joy1_x =  0.0;
         this.joy1_y =  0.0;
