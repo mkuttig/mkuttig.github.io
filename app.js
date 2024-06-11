@@ -122,9 +122,9 @@ class App{
         // Heli physics
         const dt = this.clock.getDelta();
 
-        this.heli_x =  this.joy2_x;
-        this.heli_z =  this.joy2_y;
-        this.heli_y = -this.joy1_y;
+        // this.heli_x =  this.joy2_x;
+        // this.heli_z =  this.joy2_y;
+        // this.heli_y = -this.joy1_y;
         
         if (this.bell) {
             //this.bell.rotateY(this.joy1_x);
