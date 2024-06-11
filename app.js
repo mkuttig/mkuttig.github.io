@@ -128,8 +128,8 @@ class App{
         this.heli_y = -this.joy1_y;
         
         if (this.bell) {
-            this.bell.rotateY(this.joy1_x);
-            this.bell.position.set( this.heli_x, this.heli_y, this.heli_z);            
+            //this.bell.rotateY(this.joy1_x);
+            //this.bell.position.set( this.heli_x, this.heli_y, this.heli_z);            
         }
             
         this.renderer.render( this.scene, this.camera );
