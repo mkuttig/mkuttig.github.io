@@ -135,9 +135,9 @@ class App {
         // this.heli_z =  this.joy2_y;
         // this.heli_y = -this.joy1_y;
         
-        this.pitchVector.x = this.joy2_x;
-        this.pitchVector.z = this.joy2_z;
-        this.pitchVector.y = -this.joy1_y;
+        this.pitchVector.setX(this.joy2_x);
+        this.pitchVector.setZ(this.joy2_z);
+        this.pitchVector.setY(this.joy1_y);
         const result = simulateHelicopter(this.bell.position, this.orientation, this.pitchVector, this.liftStrength, this.tailDeflection, dt);
         
         // Update Three.js Objektausrichtung
