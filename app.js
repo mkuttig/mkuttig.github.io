@@ -136,6 +136,7 @@ class App {
         // this.heli_y = -this.joy1_y;
         pitchVector.x = this.joy2_x;
         pitchVector.z = this.joy2_z;
+        pitchVector.y = 0;
         let orientation = new THREE.Vector3(0, 1, 0);
         const result = simulateHelicopter(this.bell.position, orientation, pitchVector, liftStrength, tailDeflection, dT);
         
