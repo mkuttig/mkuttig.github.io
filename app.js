@@ -141,7 +141,7 @@ class App {
         const result = simulateHelicopter(this.bell.position, orientation, pitchVector, liftStrength, tailDeflection, dT);
         
         // Update Three.js Objektausrichtung
-        cube.rotation.z += tailDeflection * deltaTime;
+        this.bell.rotation.z += tailDeflection * deltaTime;
         
         //this.heli_y = this.heli_y + this.gravity * dt + (-this.joy1_y);
         if (result.position.y < 0.55) result.position.y = 0.55;
