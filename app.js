@@ -134,11 +134,11 @@ class App {
         // this.heli_x =  this.joy2_x;
         // this.heli_z =  this.joy2_y;
         // this.heli_y = -this.joy1_y;
-        pitchVector.x = this.joy2_x;
-        pitchVector.z = this.joy2_z;
-        pitchVector.y = 0;
-        let orientation = new THREE.Vector3(0, 1, 0);
-        const result = simulateHelicopter(this.bell.position, orientation, pitchVector, liftStrength, tailDeflection, dT);
+        
+        this.pitchVector.x = this.joy2_x;
+        this.pitchVector.z = this.joy2_z;
+        this.pitchVector.y = -this.joy1_y;
+        const result = simulateHelicopter(this.bell.position, this.orientation, this.pitchVector, this.liftStrength, this.tailDeflection, dT);
         
         // Update Three.js Objektausrichtung
         this.bell.rotation.z += tailDeflection * deltaTime;
