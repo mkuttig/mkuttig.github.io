@@ -138,10 +138,10 @@ class App {
         this.pitchVector.x = this.joy2_x;
         this.pitchVector.z = this.joy2_z;
         this.pitchVector.y = -this.joy1_y;
-        const result = simulateHelicopter(this.bell.position, this.orientation, this.pitchVector, this.liftStrength, this.tailDeflection, dT);
+        const result = simulateHelicopter(this.bell.position, this.orientation, this.pitchVector, this.liftStrength, this.tailDeflection, dt);
         
         // Update Three.js Objektausrichtung
-        this.bell.rotation.z += tailDeflection * deltaTime;
+        this.bell.rotation.z += this.tailDeflection * dt;
         
         //this.heli_y = this.heli_y + this.gravity * dt + (-this.joy1_y);
         if (result.position.y < 0.55) result.position.y = 0.55;
