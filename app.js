@@ -84,8 +84,15 @@ class App {
                 console.log(err);
             });
 
-    }
+        // Initiale Werte
+        let position = new THREE.Vector3(0, 0, 0); // Aktuelle Position des Hubschraubers
+        let orientation = new THREE.Vector3(0, 1, 0); // Aktuelle Ausrichtung des Hubschraubers
+        const pitchVector = new THREE.Vector3(0, 1, 0.5); // Richtung der Auftriebskraft
+        const liftStrength = 10.0; // Stärke der Auftriebskraft
+        const tailDeflection = 0.1; // Heckauslenkung
+        const deltaTime = 0.1; // Zeitschritt
 
+    }
 
     setupVR() {
         this.renderer.xr.enabled = true;
@@ -112,8 +119,6 @@ class App {
         return controllers;
     }
 
-
-
     resize() {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
@@ -122,25 +127,66 @@ class App {
 
     render() {
         this.handelControllerInput();
-
+        
         // Heli physics
         const dt = this.clock.getDelta();
 
         // this.heli_x =  this.joy2_x;
         // this.heli_z =  this.joy2_y;
         // this.heli_y = -this.joy1_y;
-
-        this.heli_y = this.heli_y + this.gravity * dt + (-this.joy1_y);
-        if (this.heli_y < 0.55) this.heli_y = 0.55;
+        pitchVector.x = this.joy2_x;
+        pitchVector.z = this.joy2_z;
+        let orientation = new THREE.Vector3(0, 1, 0);
+        const result = simulateHelicopter(this.bell.position, orientation, pitchVector, liftStrength, tailDeflection, dT);
+        
+        // Update Three.js Objektausrichtung
+        cube.rotation.z += tailDeflection * deltaTime;
+        
+        //this.heli_y = this.heli_y + this.gravity * dt + (-this.joy1_y);
+        if (result.position.y < 0.55) result.position.y = 0.55;
 
         // Heli position update
         if (this.bell) {
-            this.bell.position.set(this.heli_x, this.heli_y, this.heli_z);
+            this.bell.position.set(result.position.x, result.position.y, result.heli_z);
         }
 
 
         this.renderer.render(this.scene, this.camera);
     }
+
+    simulateHelicopter(position, orientation, pitchVector, liftStrength, tailDeflection, deltaTime) {
+        
+        const gravity = 9.81; // Gewichtskraft in negativer Z-Richtung
+        const gravityForce = new THREE.Vector3(0, -gravity, 0);
+
+        // Berechne die resultierende Auftriebskraft basierend auf dem Pitch-Vektor und der Stärke
+        const liftForce = pitchVector.clone().multiplyScalar(liftStrength);
+
+        // Addiere die Gewichtskraft zur resultierenden Auftriebskraft
+        const totalForce = liftForce.add(gravityForce);
+
+        // Aktualisiere die Position basierend auf der resultierenden Kraft
+        position.add(totalForce.multiplyScalar(deltaTime));
+
+        // Aktualisiere die Ausrichtung basierend auf der Heckauslenkung
+        orientation = rotateAroundZ(orientation, tailDeflection * deltaTime);
+
+        return { position, orientation };
+    
+    }
+
+
+    rotateAroundZ(v, angle) {
+
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
+        
+        return new THREE.Vector3(v.x * cosA - v.y * sinA,
+                                 v.x * sinA + v.y * cosA,
+                                 v.z);
+    
+    }
+
 
     handelControllerInput() {
         const session = this.renderer.xr.getSession();
