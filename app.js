@@ -1,29 +1,21 @@
 import * as THREE from './libs/three/three.module.js';
-
 import { OrbitControls } from './libs/three/jsm/OrbitControls.js';
 import { GLTFLoader } from './libs/three/jsm/GLTFLoader.js';
-import { RGBELoader } from './libs/three/jsm/RGBELoader.js';
 import { BoxLineGeometry } from './libs/three/jsm/BoxLineGeometry.js';
-
-import { VRButton } from './libs/three/jsm/VRButton.js'
+import { VRButton } from './libs/three/jsm/VRButton.js';
 import { XRControllerModelFactory } from './libs/three/jsm/XRControllerModelFactory.js';
 
-
 class App {
-
     constructor() {
+        this.gravity = -9.81;
+        this.heliPos = new THREE.Vector3(0, 2, -2);
+        this.heliVel = new THREE.Vector3(0, 0, 0);
+        this.heliRot = new THREE.Euler(0, 0, 0, 'YXZ'); // pitch, yaw, roll
 
-
-        this.gravity = -1.0;
-
-        this.heli_x = 0.0;
-        this.heli_y = 2.0;
-        this.heli_z = -2.0;
-
-        this.joy1_x = 0.0;
-        this.joy1_y = 0.0;
-        this.joy2_x = 0.0;
-        this.joy2_y = 0.0;
+        this.pitch = 0;
+        this.roll = 0;
+        this.yaw = 0;
+        this.throttle = 0;
 
         const container = document.createElement('div');
         document.body.appendChild(container);
@@ -44,20 +36,15 @@ class App {
         this.scene.background = new THREE.Color(0xaaaaaa);
 
         this.setEnvironment();
-
-        const controls = new OrbitControls(this.camera, this.renderer.domElement);
+        new OrbitControls(this.camera, this.renderer.domElement);
 
         this.setupVR();
-
         this.renderer.setAnimationLoop(this.render.bind(this));
 
         window.addEventListener('resize', this.resize.bind(this));
-
     }
 
     setEnvironment() {
-        //const rgb_loader = new RGBELoader().setDataType( THREE.UnsignedByteType ); 
-
         const ambient = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 0.3);
         this.scene.add(ambient);
 
@@ -65,33 +52,24 @@ class App {
         light.position.set(0.2, 1, 1);
         this.scene.add(light);
 
-        this.room = new THREE.LineSegments(new BoxLineGeometry(20, 20, 20, 20, 20, 20),
-            new THREE.LineBasicMaterial({ color: 0x202020 }));
+        this.room = new THREE.LineSegments(
+            new BoxLineGeometry(20, 20, 20, 20, 20, 20),
+            new THREE.LineBasicMaterial({ color: 0x202020 })
+        );
         this.room.position.set(0, 10, 0);
         this.scene.add(this.room);
 
-        const self = this;
         const loader = new GLTFLoader().setPath('./assets/');
-        loader.load('bell.glb',
-            function (gltf) {
-                self.bell = gltf.scene;
-                self.bell.scale.set(0.1, 0.1, 0.1);
-                self.scene.add(self.bell);
+        loader.load(
+            'bell.glb',
+            gltf => {
+                this.bell = gltf.scene;
+                this.bell.scale.set(0.1, 0.1, 0.1);
+                this.scene.add(this.bell);
             },
-            function (xhr) { },
-            function (err) {
-                console.log('Error loading bell.glb');
-                console.log(err);
-            });
-
-        // Initiale Werte
-        let position = new THREE.Vector3(0, 0, 0); // Aktuelle Position des Hubschraubers
-        let orientation = new THREE.Vector3(0, 1, 0); // Aktuelle Ausrichtung des Hubschraubers
-        const pitchVector = new THREE.Vector3(0, 1, 0.5); // Richtung der Auftriebskraft
-        const liftStrength = 10.0; // Stärke der Auftriebskraft
-        const tailDeflection = 0.1; // Heckauslenkung
-        const deltaTime = 0.1; // Zeitschritt
-
+            undefined,
+            err => console.error('Error loading bell.glb', err)
+        );
     }
 
     setupVR() {
@@ -102,11 +80,9 @@ class App {
 
     buildControllers() {
         const controllerModelFactory = new XRControllerModelFactory();
-        const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -1)]);
         const controllers = [];
 
         for (let i = 0; i <= 1; i++) {
-
             const controller = this.renderer.xr.getController(i);
             controllers.push(controller);
             this.scene.add(controller);
@@ -127,68 +103,55 @@ class App {
 
     render() {
         this.handelControllerInput();
-        
-        // Heli physics
+
         const dt = this.clock.getDelta();
-
-        // this.heli_x =  this.joy2_x;
-        // this.heli_z =  this.joy2_y;
-        // this.heli_y = -this.joy1_y;
-        /*
-        this.pitchVector.setX(this.joy2_x);
-        this.pitchVector.setZ(this.joy2_z);
-        this.pitchVector.setY(this.joy1_y);
-        const result = simulateHelicopter(this.bell.position, this.orientation, this.pitchVector, this.liftStrength, this.tailDeflection, dt);
-        
-        // Update Three.js Objektausrichtung
-        this.bell.rotation.z += this.tailDeflection * dt;
-        
-        //this.heli_y = this.heli_y + this.gravity * dt + (-this.joy1_y);
-        if (result.position.y < 0.55) result.position.y = 0.55;
-
-        // Heli position update
         if (this.bell) {
-            this.bell.position.set(result.position.x, result.position.y, result.heli_z);
+            const maxTilt = Math.PI / 6; // ±30°
+            const maxYawRate = 1.5;      // rad/s
+            const maxThrottle = 20.0;    // Auftriebskraft
+
+            // Aktuelle Ausrichtung
+            this.heliRot.x = this.pitch * maxTilt;
+            this.heliRot.z = -this.roll * maxTilt;
+            this.heliRot.y += this.yaw * maxYawRate * dt;
+
+            this.bell.rotation.copy(this.heliRot);
+
+            // Richtung in Weltkoordinaten (nach vorn zeigt -Z)
+            const forward = new THREE.Vector3(0, 0, -1).applyEuler(this.heliRot);
+            const right = new THREE.Vector3(1, 0, 0).applyEuler(this.heliRot);
+            const up = new THREE.Vector3(0, 1, 0).applyEuler(this.heliRot);
+
+            // Auftriebskraft
+            const lift = up.clone().multiplyScalar(this.throttle * maxThrottle);
+
+            // Gravitation
+            const gravity = new THREE.Vector3(0, this.gravity, 0);
+
+            // Beschleunigung
+            const acc = new THREE.Vector3().add(lift).add(gravity);
+
+            // Geschwindigkeit integrieren
+            this.heliVel.add(acc.multiplyScalar(dt));
+
+            // Dämpfung
+            this.heliVel.multiplyScalar(0.99);
+
+            // Position integrieren
+            this.heliPos.add(this.heliVel.clone().multiplyScalar(dt));
+
+            // Bodenlimit
+            if (this.heliPos.y < 0.5) {
+                this.heliPos.y = 0.5;
+                this.heliVel.y = 0;
+            }
+
+            // Position aktualisieren
+            this.bell.position.copy(this.heliPos);
         }
 
-        */
-       
         this.renderer.render(this.scene, this.camera);
     }
-
-    simulateHelicopter(position, orientation, pitchVector, liftStrength, tailDeflection, deltaTime) {
-        
-        const gravity = 9.81; // Gewichtskraft in negativer Z-Richtung
-        const gravityForce = new THREE.Vector3(0, -gravity, 0);
-
-        // Berechne die resultierende Auftriebskraft basierend auf dem Pitch-Vektor und der Stärke
-        const liftForce = pitchVector.clone().multiplyScalar(liftStrength);
-
-        // Addiere die Gewichtskraft zur resultierenden Auftriebskraft
-        const totalForce = liftForce.add(gravityForce);
-
-        // Aktualisiere die Position basierend auf der resultierenden Kraft
-        position.add(totalForce.multiplyScalar(deltaTime));
-
-        // Aktualisiere die Ausrichtung basierend auf der Heckauslenkung
-        orientation = rotateAroundZ(orientation, tailDeflection * deltaTime);
-
-        return { position, orientation };
-    
-    }
-
-
-    rotateAroundZ(v, angle) {
-
-        const cosA = Math.cos(angle);
-        const sinA = Math.sin(angle);
-        
-        return new THREE.Vector3(v.x * cosA - v.y * sinA,
-                                 v.x * sinA + v.y * cosA,
-                                 v.z);
-    
-    }
-
 
     handelControllerInput() {
         const session = this.renderer.xr.getSession();
@@ -196,13 +159,14 @@ class App {
             const inputSources = session.inputSources;
             for (const inputSource of inputSources) {
                 if (inputSource.gamepad) {
-                    if (inputSource.handedness == 'left') {
-                        this.joy1_x = inputSource.gamepad.axes[2] * 0.005;
-                        this.joy1_y = inputSource.gamepad.axes[3] * 0.005;
+                    const axes = inputSource.gamepad.axes;
+                    if (inputSource.handedness === 'left') {
+                        this.throttle = (-axes[3] + 1) / 2; // von 0 (unten) bis 1 (oben)
+                        this.yaw = axes[2];
                     }
-                    if (inputSource.handedness == 'right') {
-                        this.joy2_x = inputSource.gamepad.axes[2] * 0.005;
-                        this.joy2_y = inputSource.gamepad.axes[3] * 0.005;
+                    if (inputSource.handedness === 'right') {
+                        this.pitch = -axes[3];
+                        this.roll = axes[2];
                     }
                 }
             }
