@@ -8,16 +8,11 @@ import { XRControllerModelFactory } from './libs/three/jsm/XRControllerModelFact
 
 class App {
     constructor() {
-        // Gravitationskonstante (m/s²)
         this.gravity = -9.81;
-
-        // Startposition und Bewegungszustand des Helis
         this.heliPos = new THREE.Vector3(0, 2, -2);
         this.heliVel = new THREE.Vector3(0, 0, 0);
-        this.heliQuat = new THREE.Quaternion(); // Quaternion statt Euler-Winkel
-        this.angularVelocity = new THREE.Vector3(); // Winkelgeschwindigkeit (Roll, Pitch, Yaw)
 
-        // Steuerung (Pitch, Roll, Yaw, Throttle)
+        // Steuerungseingaben (aktualisiert durch VR-Controller)
         this.pitch = 0;
         this.roll = 0;
         this.yaw = 0;
@@ -43,19 +38,20 @@ class App {
 
         this.setEnvironment();
         new OrbitControls(this.camera, this.renderer.domElement);
-        this.setupVR();
 
+        this.setupVR();
         this.renderer.setAnimationLoop(this.render.bind(this));
         window.addEventListener('resize', this.resize.bind(this));
     }
 
     setEnvironment() {
-        this.scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 0.4));
-        const light = new THREE.DirectionalLight(0xffffff, 0.8);
-        light.position.set(0, 20, 10);
+        const ambient = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 0.3);
+        this.scene.add(ambient);
+
+        const light = new THREE.DirectionalLight();
+        light.position.set(0.2, 1, 1);
         this.scene.add(light);
 
-        // Drahtgitterraum zur Orientierung
         this.room = new THREE.LineSegments(
             new BoxLineGeometry(20, 20, 20, 20, 20, 20),
             new THREE.LineBasicMaterial({ color: 0x202020 })
@@ -63,13 +59,18 @@ class App {
         this.room.position.set(0, 10, 0);
         this.scene.add(this.room);
 
-        // Helikoptermodell laden
         const loader = new GLTFLoader().setPath('./assets/');
-        loader.load('bell.glb', gltf => {
-            this.bell = gltf.scene;
-            this.bell.scale.set(0.1, 0.1, 0.1);
-            this.scene.add(this.bell);
-        }, undefined, err => console.error('Fehler beim Laden von bell.glb', err));
+        loader.load(
+            'bell.glb',
+            gltf => {
+                this.bell = gltf.scene;
+                this.bell.scale.set(0.1, 0.1, 0.1);
+                this.bell.rotation.y = Math.PI; // Modell um 180° drehen, damit Nase nach -Z zeigt
+                this.scene.add(this.bell);
+            },
+            undefined,
+            err => console.error('Fehler beim Laden von bell.glb', err)
+        );
     }
 
     setupVR() {
@@ -91,6 +92,7 @@ class App {
             grip.add(controllerModelFactory.createControllerModel(grip));
             this.scene.add(grip);
         }
+
         return controllers;
     }
 
@@ -105,40 +107,29 @@ class App {
         const dt = this.clock.getDelta();
 
         if (this.bell) {
-            // Steuerungsparameter
-            const maxRate = Math.PI; // rad/s maximale Drehgeschwindigkeit
-            const maxThrottle = 30.0;
+            const maxTilt = Math.PI / 6;
+            const maxYawRate = 1.5;
+            const maxThrottle = 20.0;
 
-            // Aktuelle Eingaben in Winkelgeschwindigkeiten umwandeln
-            this.angularVelocity.set(
-                this.roll * maxRate,
-                this.yaw * maxRate,
-                this.pitch * maxRate
-            );
+            const q = this.bell.quaternion.clone();
+            const qPitch = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.pitch * maxTilt);
+            const qRoll  = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -this.roll * maxTilt);
+            const qYaw   = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.yaw * maxYawRate * dt);
 
-            // Drehung per Quaternion integrieren
-            const axis = this.angularVelocity.clone().normalize();
-            const angle = this.angularVelocity.length() * dt;
-            if (angle > 0.00001) {
-                const deltaQuat = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-                this.heliQuat.multiplyQuaternions(deltaQuat, this.heliQuat);
-                this.heliQuat.normalize();
-            }
+            const qSteering = new THREE.Quaternion().multiply(qYaw).multiply(q);
+            qSteering.multiply(qPitch).multiply(qRoll);
 
-            // Quaternion auf Modell anwenden
-            this.bell.quaternion.copy(this.heliQuat);
+            this.bell.quaternion.copy(qSteering);
 
-            // Auftriebsrichtung relativ zum Heli
-            const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.heliQuat);
+            const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.bell.quaternion);
             const lift = up.clone().multiplyScalar(this.throttle * maxThrottle);
             const gravity = new THREE.Vector3(0, this.gravity, 0);
 
             const acc = new THREE.Vector3().add(lift).add(gravity);
             this.heliVel.add(acc.multiplyScalar(dt));
-            this.heliVel.multiplyScalar(0.995); // Luftwiderstand
+            this.heliVel.multiplyScalar(0.99);
             this.heliPos.add(this.heliVel.clone().multiplyScalar(dt));
 
-            // Bodenberührung
             if (this.heliPos.y < 0.5) {
                 this.heliPos.y = 0.5;
                 this.heliVel.y = 0;
@@ -157,13 +148,15 @@ class App {
             for (const inputSource of inputSources) {
                 if (inputSource.gamepad) {
                     const axes = inputSource.gamepad.axes;
+
                     if (inputSource.handedness === 'left') {
                         this.throttle = (-axes[3] + 1) / 2;
-                        this.yaw = -axes[2];
+                        this.yaw = axes[2];
                     }
+
                     if (inputSource.handedness === 'right') {
                         this.pitch = -axes[3];
-                        this.roll = -axes[2];
+                        this.roll = axes[2];
                     }
                 }
             }
