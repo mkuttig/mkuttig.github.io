@@ -134,7 +134,7 @@ class App {
         // this.heli_x =  this.joy2_x;
         // this.heli_z =  this.joy2_y;
         // this.heli_y = -this.joy1_y;
-        
+        /*
         this.pitchVector.setX(this.joy2_x);
         this.pitchVector.setZ(this.joy2_z);
         this.pitchVector.setY(this.joy1_y);
@@ -151,7 +151,8 @@ class App {
             this.bell.position.set(result.position.x, result.position.y, result.heli_z);
         }
 
-
+        */
+       
         this.renderer.render(this.scene, this.camera);
     }
 
