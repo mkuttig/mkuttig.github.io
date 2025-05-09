@@ -9,14 +9,11 @@ import { XRControllerModelFactory } from './libs/three/jsm/XRControllerModelFact
 class App {
     constructor() {
         this.gravity = -9.81;
-
-        // Physikalischer Zustand
         this.heliPos = new THREE.Vector3(0, 2, -2);
         this.heliVel = new THREE.Vector3(0, 0, 0);
-        this.heliQuat = new THREE.Quaternion(); // Orientierung als Quaternion
-        this.angularVel = new THREE.Vector3(0, 0, 0); // Rotationsgeschwindigkeit (rad/s)
+        this.heliQuat = new THREE.Quaternion();
+        this.angularVel = new THREE.Vector3();
 
-        // Eingaben
         this.pitch = 0;
         this.roll = 0;
         this.yaw = 0;
@@ -106,14 +103,14 @@ class App {
     }
 
     render() {
-        this.handleControllerInput();
+        this.handelControllerInput();
         const dt = this.clock.getDelta();
 
         if (this.bell) {
             const maxAngularRate = Math.PI; // rad/s
             const maxThrottle = 20.0;
 
-            // Ziel-Rotationsgeschwindigkeit anhand der Steuerung
+            // Ziel-Rotationsgeschwindigkeit aus Steuerung
             const targetAngularVel = new THREE.Vector3(
                 this.pitch * maxAngularRate,
                 this.yaw * maxAngularRate,
@@ -124,7 +121,7 @@ class App {
             const smoothing = 5.0;
             this.angularVel.lerp(targetAngularVel, smoothing * dt);
 
-            // Delta-Quaternion berechnen
+            // Quaternion berechnen
             const deltaQuat = new THREE.Quaternion();
             const axis = this.angularVel.clone().normalize();
             const angle = this.angularVel.length() * dt;
@@ -136,11 +133,15 @@ class App {
             this.heliQuat.normalize();
             this.bell.quaternion.copy(this.heliQuat);
 
-            // Auftriebsrichtung = "oben" in Körperkoordinaten
+            // Auftrieb entlang "oben"-Achse des Helikopters
             const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.heliQuat);
             const lift = up.multiplyScalar(this.throttle * maxThrottle);
+
+            // Stabiler Anteil entlang Welt-Y-Achse (simuliert Collective)
+            const verticalLift = new THREE.Vector3(0, this.throttle * maxThrottle * 0.3, 0);
+
             const gravity = new THREE.Vector3(0, this.gravity, 0);
-            const acc = lift.add(gravity);
+            const acc = lift.add(verticalLift).add(gravity);
 
             this.heliVel.add(acc.multiplyScalar(dt));
             this.heliVel.multiplyScalar(0.99);
@@ -157,9 +158,7 @@ class App {
         this.renderer.render(this.scene, this.camera);
     }
 
-    handleControllerInput() {
-        const inputSensitivity = 0.2;
-
+    handelControllerInput() {
         const session = this.renderer.xr.getSession();
         if (session) {
             const inputSources = session.inputSources;
@@ -167,14 +166,17 @@ class App {
                 if (inputSource.gamepad) {
                     const axes = inputSource.gamepad.axes;
 
+                    // Reduzierte Stick-Empfindlichkeit
+                    const scale = 0.4;
+
                     if (inputSource.handedness === 'left') {
-                        this.throttle = ((-axes[3] + 1) / 2) * (inputSensitivity*2);
-                        this.yaw = axes[2] * inputSensitivity;
+                        this.throttle = (-axes[3] + 1) / 2;
+                        this.yaw = axes[2] * scale;
                     }
 
                     if (inputSource.handedness === 'right') {
-                        this.pitch = -axes[3] * inputSensitivity;
-                        this.roll = axes[2] * inputSensitivity;
+                        this.pitch = -axes[3] * scale;
+                        this.roll = axes[2] * scale;
                     }
                 }
             }
