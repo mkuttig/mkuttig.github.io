@@ -159,11 +159,11 @@ class App {
                     const axes = inputSource.gamepad.axes;
                     if (inputSource.handedness === 'left') {
                         this.throttle = (-axes[3] + 1) / 2;
-                        this.yaw = axes[2];
+                        this.yaw = -axes[2];
                     }
                     if (inputSource.handedness === 'right') {
                         this.pitch = -axes[3];
-                        this.roll = axes[2];
+                        this.roll = -axes[2];
                     }
                 }
             }
