@@ -176,7 +176,7 @@ class App {
 
                     if (inputSource.handedness === 'right') {
                         this.pitch = -axes[3] * scale;
-                        this.roll = axes[2] * scale;
+                        this.roll = -axes[2] * scale;
                     }
                 }
             }
