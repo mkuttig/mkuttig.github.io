@@ -1,38 +1,35 @@
-// Importiere benötigte Module
+// Importiere notwendige Module aus Three.js
 import * as THREE from './libs/three/three.module.js';
 import { OrbitControls } from './libs/three/jsm/OrbitControls.js';
 import { GLTFLoader } from './libs/three/jsm/GLTFLoader.js';
+import { BoxLineGeometry } from './libs/three/jsm/BoxLineGeometry.js';
 import { VRButton } from './libs/three/jsm/VRButton.js';
 import { XRControllerModelFactory } from './libs/three/jsm/XRControllerModelFactory.js';
 
 class App {
     constructor() {
-        // Physikalische Parameter
-        this.gravity = new THREE.Vector3(0, -9.81, 0); // Erdbeschleunigung
-        this.mass = 1.5; // Masse des Hubschraubers in kg
-        this.liftStrength = 15.0; // Stärke des Auftriebs
-        this.torqueStrength = 0.5; // Stärke des Drehmoments
+        // Gravitationskonstante (m/s²)
+        this.gravity = -9.81;
 
-        // Initiale Zustände
-        this.position = new THREE.Vector3(0, 2, -2); // Startposition
-        this.velocity = new THREE.Vector3(); // Anfangsgeschwindigkeit
-        this.acceleration = new THREE.Vector3(); // Anfangsbeschleunigung
+        // Physikalische Zustände des Helikopters
+        this.heliPos = new THREE.Vector3(0, 2, -2); // Startposition
+        this.heliVel = new THREE.Vector3(0, 0, 0);  // Anfangsgeschwindigkeit
+        this.heliRot = new THREE.Euler(0, 0, 0, 'YXZ'); // Ausrichtung (Pitch, Yaw, Roll)
 
-        this.orientation = new THREE.Quaternion(); // Anfangsorientierung
-        this.angularVelocity = new THREE.Vector3(); // Anfangsdrehgeschwindigkeit
+        // Steuerungseingaben (aktualisiert durch VR-Controller)
+        this.pitch = 0;    // Nickbewegung (vor/zurück)
+        this.roll = 0;     // Rollbewegung (links/rechts)
+        this.yaw = 0;      // Gierbewegung (Drehung)
+        this.throttle = 0; // Schubkraft (Auftrieb)
 
-        // Steuerungseingaben
-        this.throttle = 0.0; // Kollektiver Pitch (Auftrieb)
-        this.rollInput = 0.0; // Roll-Eingabe
-        this.pitchInput = 0.0; // Pitch-Eingabe
-        this.yawInput = 0.0; // Yaw-Eingabe
-
-        // Setup der Szene
+        // Erzeuge ein Container-Element für das Canvas
         const container = document.createElement('div');
         document.body.appendChild(container);
 
+        // Initialisiere Zeitsteuerung
         this.clock = new THREE.Clock();
 
+        // WebGL-Renderer vorbereiten
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -40,51 +37,63 @@ class App {
         this.renderer.physicallyCorrectLights = true;
         container.appendChild(this.renderer.domElement);
 
+        // Kamera konfigurieren (Sichtfeld, Seitenverhältnis, Nah-/Fernbereich)
         this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-        this.camera.position.set(0, 1.6, 2.0);
+        this.camera.position.set(0, 1.6, 2.0); // Position der Kamera auf Augenhöhe
 
+        // Erstelle Szene und Hintergrundfarbe
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0xaaaaaa);
 
-        const controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.setEnvironment(); // Beleuchtung, Raum, Modell
+        new OrbitControls(this.camera, this.renderer.domElement); // Maussteuerung für Debug
 
-        this.setEnvironment();
+        this.setupVR(); // VR aktivieren
 
-        this.setupVR();
-
+        // Haupt-Animations-Loop starten
         this.renderer.setAnimationLoop(this.render.bind(this));
 
-        window.addEventListener('resize', this.resize.bind(this));
+        window.addEventListener('resize', this.resize.bind(this)); // Fensteranpassung
     }
 
     setEnvironment() {
-        // Beleuchtung
+        // Umgebungslicht (diffuses Licht von oben/unten)
         const ambient = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 0.3);
         this.scene.add(ambient);
 
+        // Direktionales Sonnenlicht
         const light = new THREE.DirectionalLight();
         light.position.set(0.2, 1, 1);
         this.scene.add(light);
 
-        // Lade das Hubschraubermodell
+        // Drahtgitter-Raum zur Orientierung
+        this.room = new THREE.LineSegments(
+            new BoxLineGeometry(20, 20, 20, 20, 20, 20),
+            new THREE.LineBasicMaterial({ color: 0x202020 })
+        );
+        this.room.position.set(0, 10, 0);
+        this.scene.add(this.room);
+
+        // Lade Helikopter-Modell (GLTF)
         const loader = new GLTFLoader().setPath('./assets/');
-        loader.load('bell.glb',
-            (gltf) => {
+        loader.load(
+            'bell.glb',
+            gltf => {
                 this.bell = gltf.scene;
-                this.bell.scale.set(0.1, 0.1, 0.1);
+                this.bell.scale.set(0.1, 0.1, 0.1); // Skalierung anpassen
                 this.scene.add(this.bell);
-                this.bell.position.copy(this.position);
-                this.bell.quaternion.copy(this.orientation);
             },
             undefined,
-            (err) => {
-                console.error('Fehler beim Laden von bell.glb:', err);
-            });
+            err => console.error('Fehler beim Laden von bell.glb', err)
+        );
     }
 
     setupVR() {
+        // VR-Modus aktivieren
         this.renderer.xr.enabled = true;
         document.body.appendChild(VRButton.createButton(this.renderer));
+
+        // VR-Controller-Modelle hinzufügen
         this.controllers = this.buildControllers();
     }
 
@@ -106,86 +115,89 @@ class App {
     }
 
     resize() {
+        // Kamera- und Renderer-Größe aktualisieren
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
     render() {
+        // Eingabe der VR-Controller lesen
+        this.handelControllerInput();
+
+        // Zeit seit letztem Frame
         const dt = this.clock.getDelta();
 
-        this.handleControllerInput();
-
-        // Berechne lokale Achsen basierend auf der aktuellen Orientierung
-        const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.orientation);
-        const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.orientation);
-        const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.orientation);
-
-        // Berechne Auftriebskraft
-        const liftForce = up.clone().multiplyScalar(this.throttle * this.liftStrength);
-
-        // Gesamtkraft = Auftrieb + Gewicht
-        const totalForce = new THREE.Vector3().addVectors(liftForce, this.gravity.clone().multiplyScalar(this.mass));
-
-        // Beschleunigung = Kraft / Masse
-        this.acceleration.copy(totalForce).divideScalar(this.mass);
-
-        // Aktualisiere Geschwindigkeit und Position
-        this.velocity.add(this.acceleration.clone().multiplyScalar(dt));
-        this.position.add(this.velocity.clone().multiplyScalar(dt));
-
-        // Berechne Drehmomente basierend auf Eingaben
-        const torque = new THREE.Vector3(
-            this.rollInput * this.torqueStrength,
-            this.yawInput * this.torqueStrength,
-            this.pitchInput * this.torqueStrength
-        );
-
-        // Aktualisiere Drehgeschwindigkeit
-        this.angularVelocity.add(torque.clone().multiplyScalar(dt));
-
-        // Dämpfe die Drehgeschwindigkeit
-        this.angularVelocity.multiplyScalar(0.98);
-
-        // Aktualisiere Orientierung basierend auf Drehgeschwindigkeit
-        const angularVelocityQuat = new THREE.Quaternion(
-            this.angularVelocity.x * dt,
-            this.angularVelocity.y * dt,
-            this.angularVelocity.z * dt,
-            0
-        );
-        angularVelocityQuat.multiply(this.orientation);
-        this.orientation.x += 0.5 * angularVelocityQuat.x;
-        this.orientation.y += 0.5 * angularVelocityQuat.y;
-        this.orientation.z += 0.5 * angularVelocityQuat.z;
-        this.orientation.w += 0.5 * angularVelocityQuat.w;
-        this.orientation.normalize();
-
-        // Aktualisiere Position und Orientierung des Modells
         if (this.bell) {
-            this.bell.position.copy(this.position);
-            this.bell.quaternion.copy(this.orientation);
+            // Steuerbereiche definieren
+            const maxTilt = Math.PI / 6; // Max. Neigungswinkel (±30°)
+            const maxYawRate = 1.5;      // Max. Drehgeschwindigkeit (rad/s)
+            const maxThrottle = 20.0;    // Max. Auftriebskraft
+
+            // Euler-Winkel aus Steuerung berechnen
+            this.heliRot.x = this.pitch * maxTilt;
+            this.heliRot.z = -this.roll * maxTilt;
+            this.heliRot.y += this.yaw * maxYawRate * dt;
+
+            // Rotation am Modell anwenden
+            this.bell.rotation.copy(this.heliRot);
+
+            // Richtungsvektoren relativ zum Modell
+            const forward = new THREE.Vector3(0, 0, -1).applyEuler(this.heliRot);
+            const right = new THREE.Vector3(1, 0, 0).applyEuler(this.heliRot);
+            const up = new THREE.Vector3(0, 1, 0).applyEuler(this.heliRot);
+
+            // Auftriebskraft entlang "oben"-Vektor des Modells
+            const lift = up.clone().multiplyScalar(this.throttle * maxThrottle);
+
+            // Gewichtskraft nach unten
+            const gravity = new THREE.Vector3(0, this.gravity, 0);
+
+            // Gesamtkraft = Auftrieb + Gravitation
+            const acc = new THREE.Vector3().add(lift).add(gravity);
+
+            // Geschwindigkeit mit Beschleunigung integrieren
+            this.heliVel.add(acc.multiplyScalar(dt));
+
+            // Luftwiderstand (einfache Dämpfung)
+            this.heliVel.multiplyScalar(0.99);
+
+            // Position mit Geschwindigkeit integrieren
+            this.heliPos.add(this.heliVel.clone().multiplyScalar(dt));
+
+            // Auf Bodenhöhe stoppen
+            if (this.heliPos.y < 0.5) {
+                this.heliPos.y = 0.5;
+                this.heliVel.y = 0;
+            }
+
+            // Aktuelle Position ans Modell übergeben
+            this.bell.position.copy(this.heliPos);
         }
 
+        // Szene rendern
         this.renderer.render(this.scene, this.camera);
     }
 
-    handleControllerInput() {
+    handelControllerInput() {
+        // Gamepad-Achsen der VR-Controller auslesen (Mode 2)
         const session = this.renderer.xr.getSession();
         if (session) {
             const inputSources = session.inputSources;
             for (const inputSource of inputSources) {
                 if (inputSource.gamepad) {
                     const axes = inputSource.gamepad.axes;
+
+                    // Linker Stick → Throttle & Yaw (Mode 2)
                     if (inputSource.handedness === 'left') {
-                        // Linker Controller: Pitch (vor/zurück) und Throttle (hoch/runter)
-                        this.pitchInput = -axes[3]; // Achse 3: vor/zurück
-                        this.throttle = (1 - axes[1]) / 2; // Achse 1: hoch/runter (0 bis 1)
+                        this.throttle = (-axes[3] + 1) / 2; // von 0 (unten) bis 1 (oben)
+                        this.yaw = axes[2];                // Drehen links/rechts
                     }
+
+                    // Rechter Stick → Pitch & Roll
                     if (inputSource.handedness === 'right') {
-                        // Rechter Controller: Roll (links/rechts) und Yaw (drehen)
-                        this.rollInput = axes[2]; // Achse 2: links/rechts
-                        this.yawInput = axes[0]; // Achse 0: drehen
+                        this.pitch = -axes[3]; // Nick vor/zurück
+                        this.roll = axes[2];   // Rollen links/rechts
                     }
                 }
             }
