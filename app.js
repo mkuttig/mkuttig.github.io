@@ -168,7 +168,7 @@ class App {
                     const axes = inputSource.gamepad.axes;
 
                     if (inputSource.handedness === 'left') {
-                        this.throttle = ((-axes[3] + 1) / 2) * inputSensitivity;
+                        this.throttle = ((-axes[3] + 1) / 2) * (inputSensitivity*2);
                         this.yaw = axes[2] * inputSensitivity;
                     }
 
