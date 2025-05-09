@@ -9,10 +9,14 @@ import { XRControllerModelFactory } from './libs/three/jsm/XRControllerModelFact
 class App {
     constructor() {
         this.gravity = -9.81;
+
+        // Physikalischer Zustand
         this.heliPos = new THREE.Vector3(0, 2, -2);
         this.heliVel = new THREE.Vector3(0, 0, 0);
+        this.heliQuat = new THREE.Quaternion(); // Orientierung als Quaternion
+        this.angularVel = new THREE.Vector3(0, 0, 0); // Rotationsgeschwindigkeit (rad/s)
 
-        // Steuerungseingaben (aktualisiert durch VR-Controller)
+        // Eingaben
         this.pitch = 0;
         this.roll = 0;
         this.yaw = 0;
@@ -38,8 +42,8 @@ class App {
 
         this.setEnvironment();
         new OrbitControls(this.camera, this.renderer.domElement);
-
         this.setupVR();
+
         this.renderer.setAnimationLoop(this.render.bind(this));
         window.addEventListener('resize', this.resize.bind(this));
     }
@@ -65,7 +69,6 @@ class App {
             gltf => {
                 this.bell = gltf.scene;
                 this.bell.scale.set(0.1, 0.1, 0.1);
-                this.bell.rotation.y = Math.PI; // Modell um 180° drehen, damit Nase nach -Z zeigt
                 this.scene.add(this.bell);
             },
             undefined,
@@ -103,29 +106,42 @@ class App {
     }
 
     render() {
-        this.handelControllerInput();
+        this.handleControllerInput();
         const dt = this.clock.getDelta();
 
         if (this.bell) {
-            const maxTilt = Math.PI / 6;
-            const maxYawRate = 1.5;
+            const maxAngularRate = Math.PI; // rad/s
             const maxThrottle = 20.0;
 
-            const q = this.bell.quaternion.clone();
-            const qPitch = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.pitch * maxTilt);
-            const qRoll  = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -this.roll * maxTilt);
-            const qYaw   = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.yaw * maxYawRate * dt);
+            // Ziel-Rotationsgeschwindigkeit anhand der Steuerung
+            const targetAngularVel = new THREE.Vector3(
+                this.pitch * maxAngularRate,
+                this.yaw * maxAngularRate,
+                -this.roll * maxAngularRate
+            );
 
-            const qSteering = new THREE.Quaternion().multiply(qYaw).multiply(q);
-            qSteering.multiply(qPitch).multiply(qRoll);
+            // Glätten der Rotationsgeschwindigkeit
+            const smoothing = 5.0;
+            this.angularVel.lerp(targetAngularVel, smoothing * dt);
 
-            this.bell.quaternion.copy(qSteering);
+            // Delta-Quaternion berechnen
+            const deltaQuat = new THREE.Quaternion();
+            const axis = this.angularVel.clone().normalize();
+            const angle = this.angularVel.length() * dt;
+            if (angle > 0.0001) {
+                deltaQuat.setFromAxisAngle(axis, angle);
+                this.heliQuat.multiply(deltaQuat);
+            }
 
-            const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.bell.quaternion);
-            const lift = up.clone().multiplyScalar(this.throttle * maxThrottle);
+            this.heliQuat.normalize();
+            this.bell.quaternion.copy(this.heliQuat);
+
+            // Auftriebsrichtung = "oben" in Körperkoordinaten
+            const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.heliQuat);
+            const lift = up.multiplyScalar(this.throttle * maxThrottle);
             const gravity = new THREE.Vector3(0, this.gravity, 0);
+            const acc = lift.add(gravity);
 
-            const acc = new THREE.Vector3().add(lift).add(gravity);
             this.heliVel.add(acc.multiplyScalar(dt));
             this.heliVel.multiplyScalar(0.99);
             this.heliPos.add(this.heliVel.clone().multiplyScalar(dt));
@@ -141,7 +157,9 @@ class App {
         this.renderer.render(this.scene, this.camera);
     }
 
-    handelControllerInput() {
+    handleControllerInput() {
+        const inputSensitivity = 0.2;
+
         const session = this.renderer.xr.getSession();
         if (session) {
             const inputSources = session.inputSources;
@@ -150,13 +168,13 @@ class App {
                     const axes = inputSource.gamepad.axes;
 
                     if (inputSource.handedness === 'left') {
-                        this.throttle = (-axes[3] + 1) / 2;
-                        this.yaw = axes[2];
+                        this.throttle = ((-axes[3] + 1) / 2) * inputSensitivity;
+                        this.yaw = axes[2] * inputSensitivity;
                     }
 
                     if (inputSource.handedness === 'right') {
-                        this.pitch = -axes[3];
-                        this.roll = axes[2];
+                        this.pitch = -axes[3] * inputSensitivity;
+                        this.roll = axes[2] * inputSensitivity;
                     }
                 }
             }
