@@ -170,7 +170,7 @@ class App {
                     const scale = 0.4;
 
                     if (inputSource.handedness === 'left') {
-                        this.throttle = (-axes[3] + 1) / 2;
+                        this.throttle = -axes[3]; //(-axes[3] + 1) / 2;
                         this.yaw = -axes[2] * scale;
                     }
 
