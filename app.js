@@ -54,7 +54,7 @@ class App {
         this.scene.add(light);
 
         this.room = new THREE.LineSegments(
-            new BoxLineGeometry(20, 20, 20, 20, 20, 20),
+            new BoxLineGeometry(40, 40, 40, 40, 20, 20),
             new THREE.LineBasicMaterial({ color: 0x202020 })
         );
         this.room.position.set(0, 10, 0);
