@@ -63,11 +63,11 @@ class App {
         // Canvas als Textur verwenden
         const menuTexture = new THREE.CanvasTexture(this.menuCanvas);
         const menuMaterial = new THREE.MeshBasicMaterial({ map: menuTexture, side: THREE.DoubleSide });
-        const menuGeometry = new THREE.PlaneGeometry(1, 0.5);
+        const menuGeometry = new THREE.PlaneGeometry(1.0, 0.5);
         this.menuMesh = new THREE.Mesh(menuGeometry, menuMaterial);
 
         // Position direkt vor der Kamera oder Heli
-        this.menuMesh.position.set(0, 1.6, -1); // z. B. 1 m vor dem Spieler
+        this.menuMesh.position.set(0, 1.6, -2); // z. B. 2 m vor dem Spieler
         this.menuMesh.rotation.y = 0;
         this.menuMesh.visible = true;
 
@@ -81,25 +81,32 @@ class App {
 
     updateMenuCanvas() {
         const ctx = this.menuContext;
-        ctx.clearRect(0, 0, this.menuCanvas.width, this.menuCanvas.height);
+        const width = this.menuCanvas.width;
+        const height = this.menuCanvas.height;
 
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, this.menuCanvas.width, this.menuCanvas.height);
+        ctx.clearRect(0, 0, width, height);
 
+        // Hintergrund
+        ctx.fillStyle = '#222';
+        ctx.fillRect(0, 0, width, height);
+
+        // Titel
         ctx.fillStyle = 'white';
-        ctx.font = '32px sans-serif';
-        ctx.fillText('🚁 Helikopter-Menü', 20, 50);
+        ctx.font = 'bold 36px sans-serif';
+        ctx.fillText('Heli Menü', 30, 50);
 
+        // Optionen
         ctx.font = '24px sans-serif';
-        ctx.fillText('• Start', 20, 100);
-        ctx.fillText('• Landung', 20, 140);
-        ctx.fillText('• Reset', 20, 180);
+        ctx.fillText('• Start', 30, 100);
+        ctx.fillText('• Landen', 30, 140);
+        ctx.fillText('• Reset', 30, 180);
 
         // Textur aktualisieren
-        if (this.menuMesh) {
+        if (this.menuMesh && this.menuMesh.material.map) {
             this.menuMesh.material.map.needsUpdate = true;
         }
     }
+
 
 
 
@@ -184,12 +191,11 @@ class App {
         this.handelControllerInput();
         const dt = this.clock.getDelta();
 
-        if (this.menuVisible) {
+        if (this.menuVisible && this.menuMesh) {
             this.menuMesh.visible = true;
             this.updateMenuCanvas();
-        } else {
-            this.menuMesh.visible = false;
         }
+
 
         
         if (this.bell) {
