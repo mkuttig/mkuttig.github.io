@@ -39,76 +39,10 @@ class App {
 
         this.setEnvironment();
 
-        this.menuVisible = true;
-        this.create3DMenu();
-
         new OrbitControls(this.camera, this.renderer.domElement);
         this.setupVR();
 
     }
-
-    create3DMenu() {
-        const menuWidth = 64;
-        const menuHeight = 64;
-
-        // 2D-Canvas für Menüinhalte
-        this.menuCanvas = document.createElement('canvas');
-        this.menuCanvas.width = menuWidth;
-        this.menuCanvas.height = menuHeight;
-        this.menuContext = this.menuCanvas.getContext('2d');
-
-        // 2D-Inhalt initialisieren
-        this.updateMenuCanvas();
-
-        // Canvas als Textur verwenden
-        const menuTexture = new THREE.CanvasTexture(this.menuCanvas);
-        const menuMaterial = new THREE.MeshBasicMaterial({ map: menuTexture, side: THREE.DoubleSide });
-        const menuGeometry = new THREE.PlaneGeometry(1.0, 0.5);
-        this.menuMesh = new THREE.Mesh(menuGeometry, menuMaterial);
-
-        // Position direkt vor der Kamera oder Heli
-        this.menuMesh.position.set(0, 1.6, -5); // z. B. 2 m vor dem Spieler
-        this.menuMesh.rotation.y = 0;
-        this.menuMesh.visible = true;
-
-        // Füge Menü der Szene hinzu
-        this.scene.add(this.menuMesh);
-
-        // Zustand merken
-        this.menuVisible = true;
-    }
-
-
-    updateMenuCanvas() {
-        const ctx = this.menuContext;
-        const width = this.menuCanvas.width;
-        const height = this.menuCanvas.height;
-
-        ctx.clearRect(0, 0, width, height);
-
-        // Hintergrund
-        ctx.fillStyle = '#222';
-        ctx.fillRect(0, 0, width, height);
-
-        // Titel
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 36px sans-serif';
-        ctx.fillText('Heli Menü', 30, 50);
-
-        // Optionen
-        ctx.font = '24px sans-serif';
-        ctx.fillText('• Start', 30, 100);
-        ctx.fillText('• Landen', 30, 140);
-        ctx.fillText('• Reset', 30, 180);
-
-        // Textur aktualisieren
-        if (this.menuMesh && this.menuMesh.material.map) {
-            this.menuMesh.material.map.needsUpdate = true;
-        }
-    }
-
-
-
 
     setEnvironment() {
         const ambient = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 0.3);
@@ -191,13 +125,6 @@ class App {
         this.handelControllerInput();
         const dt = this.clock.getDelta();
 
-        if (this.menuVisible && this.menuMesh) {
-            this.menuMesh.visible = true;
-            this.updateMenuCanvas();
-        }
-
-
-        
         if (this.bell) {
             const maxAngularRate = Math.PI; // rad/s
             const maxThrottle = 20.0;
@@ -265,16 +192,6 @@ class App {
                     if (inputSource.handedness === 'left') {
                         this.throttle = -axes[3]; //(-axes[3] + 1) / 2;
                         this.yaw = -axes[2] * scale;
-
-                        // Menü-Taste: meist Button[3] oder Button[4]
-                        const menuButtonIndex = 3;
-                        const pressed = buttons[menuButtonIndex]?.pressed;
-                        const prevPressed = this.prevButtonState[inputSource.handedness] || false;
-                        
-                        if (pressed && !prevPressed) {
-                            this.setMenuVisible(!this.menuVisible); // toggle
-                        }
-                        this.prevButtonState[inputSource.handedness] = pressed;
                     }
 
                     if (inputSource.handedness === 'right') {
