@@ -38,17 +38,14 @@ class App {
         this.scene.background = new THREE.Color(0xaaaaaa);
 
         this.setEnvironment();
-        new OrbitControls(this.camera, this.renderer.domElement);
-        this.setupVR();
 
-        this.renderer.setAnimationLoop(this.render.bind(this));
-        window.addEventListener('resize', this.resize.bind(this));
-
-        this.menuVisible = false;
+        this.menuVisible = true;
         this.prevButtonState = {};
         this.create3DMenu();
 
-        this.setMenuVisible(!this.menuVisible);
+        new OrbitControls(this.camera, this.renderer.domElement);
+        this.setupVR();
+
     }
 
     create3DMenu() {
@@ -103,7 +100,7 @@ class App {
         ctx.fillText(`Yaw: ${this.yaw.toFixed(2)}`, 20, 190);
         
         this.menuTexture.needsUpdate = true;
-}
+    }
 
 
     setEnvironment() {
