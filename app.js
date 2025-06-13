@@ -38,9 +38,11 @@ class App {
         this.scene.background = new THREE.Color(0xaaaaaa);
 
         this.setEnvironment();
-
         new OrbitControls(this.camera, this.renderer.domElement);
+        
         this.setupVR();
+        this.renderer.setAnimationLoop(this.render.bind(this));
+        window.addEventListener('resize', this.resize.bind(this));
 
     }
 
@@ -70,26 +72,6 @@ class App {
             undefined,
             err => console.error('Fehler beim Laden von bell.glb', err)
         );
-    }
-
-    setMenuVisible(visible) {
-        this.menuVisible = visible;
-        this.menuMesh.visible = visible;
-
-        if (visible) {
-            // Menü vor der Kamera positionieren
-            const camDir = new THREE.Vector3();
-            this.camera.getWorldDirection(camDir);
-            camDir.normalize();
-
-            const offset = camDir.multiplyScalar(2.0);
-            const menuPos = this.camera.position.clone().add(offset);
-            this.menuMesh.position.copy(menuPos);
-
-            // Zum Benutzer ausrichten
-            this.menuMesh.lookAt(this.camera.position);
-            this.updateMenuCanvas();
-        }
     }
 
     setupVR() {
