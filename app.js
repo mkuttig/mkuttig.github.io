@@ -47,6 +47,8 @@ class App {
         this.menuVisible = false;
         this.prevButtonState = {};
         this.create3DMenu();
+
+        this.setMenuVisible(!this.menuVisible);
     }
 
     create3DMenu() {
