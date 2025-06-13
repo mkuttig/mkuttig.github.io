@@ -48,8 +48,8 @@ class App {
     }
 
     create3DMenu() {
-        const menuWidth = 512;
-        const menuHeight = 512;
+        const menuWidth = 64;
+        const menuHeight = 64;
 
         // 2D-Canvas für Menüinhalte
         this.menuCanvas = document.createElement('canvas');
@@ -67,7 +67,7 @@ class App {
         this.menuMesh = new THREE.Mesh(menuGeometry, menuMaterial);
 
         // Position direkt vor der Kamera oder Heli
-        this.menuMesh.position.set(0, 1.6, -2); // z. B. 2 m vor dem Spieler
+        this.menuMesh.position.set(0, 1.6, -5); // z. B. 2 m vor dem Spieler
         this.menuMesh.rotation.y = 0;
         this.menuMesh.visible = true;
 
