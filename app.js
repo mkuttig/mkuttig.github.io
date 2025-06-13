@@ -260,9 +260,9 @@ class App {
                         const pressed = buttons[menuButtonIndex]?.pressed;
                         const prevPressed = this.prevButtonState[inputSource.handedness] || false;
                         
-                        //if (pressed && !prevPressed) {
+                        if (pressed && !prevPressed) {
                             this.setMenuVisible(!this.menuVisible); // toggle
-                        //}
+                        }
                         this.prevButtonState[inputSource.handedness] = pressed;
                     }
 
