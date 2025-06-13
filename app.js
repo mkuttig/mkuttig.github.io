@@ -43,7 +43,66 @@ class App {
 
         this.renderer.setAnimationLoop(this.render.bind(this));
         window.addEventListener('resize', this.resize.bind(this));
+
+        this.menuVisible = false;
+        this.prevButtonState = {};
+        this.create3DMenu();
     }
+
+    create3DMenu() {
+        const width = 1.2;
+        const height = 0.6;
+
+        // Canvas als Textur-Quelle
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+
+        this.menuCanvas = canvas;
+        this.menuCtx = ctx;
+      
+          // Erste Inhalte zeichnen
+        this.updateMenuCanvas();
+
+
+        // Textur aus Canvas
+        const texture = new THREE.CanvasTexture(canvas);
+        this.menuTexture = texture;
+
+        // Panel-Geometrie
+        const geometry = new THREE.PlaneGeometry(width, height);
+        const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide, transparent: true });
+
+        // 3D Menu anhaengen
+        this.menuMesh = new THREE.Mesh(geometry, material);
+        this.menuMesh.position.set(0, 1.5, -2);
+        this.menuMesh.visible = false;
+
+        this.scene.add(this.menuMesh);
+
+    }
+
+    updateMenuCanvas() {
+        const ctx = this.menuCtx;
+        const canvas = this.menuCanvas;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '28px sans-serif';
+        ctx.fillText('🚁 Helikopter-Menü', 20, 50);
+        ctx.font = '20px sans-serif';
+        ctx.fillText(`Throttle: ${this.throttle.toFixed(2)}`, 20, 100);
+        ctx.fillText(`Pitch: ${this.pitch.toFixed(2)}`, 20, 130);
+        ctx.fillText(`Roll: ${this.roll.toFixed(2)}`, 20, 160);
+        ctx.fillText(`Yaw: ${this.yaw.toFixed(2)}`, 20, 190);
+        
+        this.menuTexture.needsUpdate = true;
+}
+
 
     setEnvironment() {
         const ambient = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 0.3);
@@ -71,6 +130,26 @@ class App {
             undefined,
             err => console.error('Fehler beim Laden von bell.glb', err)
         );
+    }
+
+    setMenuVisible(visible) {
+        this.menuVisible = visible;
+        this.menuMesh.visible = visible;
+
+        if (visible) {
+            // Menü vor der Kamera positionieren
+            const camDir = new THREE.Vector3();
+            this.camera.getWorldDirection(camDir);
+            camDir.normalize();
+
+            const offset = camDir.multiplyScalar(2.0);
+            const menuPos = this.camera.position.clone().add(offset);
+            this.menuMesh.position.copy(menuPos);
+
+            // Zum Benutzer ausrichten
+            this.menuMesh.lookAt(this.camera.position);
+            this.updateMenuCanvas();
+        }
     }
 
     setupVR() {
@@ -106,6 +185,8 @@ class App {
         this.handelControllerInput();
         const dt = this.clock.getDelta();
 
+        if (this.menuVisible) this.updateMenuCanvas();
+        
         if (this.bell) {
             const maxAngularRate = Math.PI; // rad/s
             const maxThrottle = 20.0;
@@ -165,6 +246,7 @@ class App {
             for (const inputSource of inputSources) {
                 if (inputSource.gamepad) {
                     const axes = inputSource.gamepad.axes;
+                    const buttons = inputSource.gamepad.buttons;
 
                     // Reduzierte Stick-Empfindlichkeit
                     const scale = 0.4;
@@ -172,6 +254,16 @@ class App {
                     if (inputSource.handedness === 'left') {
                         this.throttle = -axes[3]; //(-axes[3] + 1) / 2;
                         this.yaw = -axes[2] * scale;
+
+                        // Menü-Taste: meist Button[3] oder Button[4]
+                        const menuButtonIndex = 3;
+                        const pressed = buttons[menuButtonIndex]?.pressed;
+                        const prevPressed = this.prevButtonState[inputSource.handedness] || false;
+                        
+                        //if (pressed && !prevPressed) {
+                            this.setMenuVisible(!this.menuVisible); // toggle
+                        //}
+                        this.prevButtonState[inputSource.handedness] = pressed;
                     }
 
                     if (inputSource.handedness === 'right') {
