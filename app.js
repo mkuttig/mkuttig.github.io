@@ -49,7 +49,7 @@ class App {
 
     create3DMenu() {
         const menuWidth = 512;
-        const menuHeight = 256;
+        const menuHeight = 512;
 
         // 2D-Canvas für Menüinhalte
         this.menuCanvas = document.createElement('canvas');
