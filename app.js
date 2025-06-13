@@ -40,7 +40,6 @@ class App {
         this.setEnvironment();
 
         this.menuVisible = true;
-        this.prevButtonState = {};
         this.create3DMenu();
 
         new OrbitControls(this.camera, this.renderer.domElement);
@@ -49,58 +48,59 @@ class App {
     }
 
     create3DMenu() {
-        const width = 1.2;
-        const height = 0.6;
+        const menuWidth = 512;
+        const menuHeight = 256;
 
-        // Canvas als Textur-Quelle
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 256;
-        const ctx = canvas.getContext('2d');
+        // 2D-Canvas für Menüinhalte
+        this.menuCanvas = document.createElement('canvas');
+        this.menuCanvas.width = menuWidth;
+        this.menuCanvas.height = menuHeight;
+        this.menuContext = this.menuCanvas.getContext('2d');
 
-        this.menuCanvas = canvas;
-        this.menuCtx = ctx;
-      
-          // Erste Inhalte zeichnen
+        // 2D-Inhalt initialisieren
         this.updateMenuCanvas();
 
+        // Canvas als Textur verwenden
+        const menuTexture = new THREE.CanvasTexture(this.menuCanvas);
+        const menuMaterial = new THREE.MeshBasicMaterial({ map: menuTexture, side: THREE.DoubleSide });
+        const menuGeometry = new THREE.PlaneGeometry(1, 0.5);
+        this.menuMesh = new THREE.Mesh(menuGeometry, menuMaterial);
 
-        // Textur aus Canvas
-        const texture = new THREE.CanvasTexture(canvas);
-        this.menuTexture = texture;
+        // Position direkt vor der Kamera oder Heli
+        this.menuMesh.position.set(0, 1.6, -1); // z. B. 1 m vor dem Spieler
+        this.menuMesh.rotation.y = 0;
+        this.menuMesh.visible = true;
 
-        // Panel-Geometrie
-        const geometry = new THREE.PlaneGeometry(width, height);
-        const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide, transparent: true });
-
-        // 3D Menu anhaengen
-        this.menuMesh = new THREE.Mesh(geometry, material);
-        this.menuMesh.position.set(0, 1.5, -2);
-        this.menuMesh.visible = false;
-
+        // Füge Menü der Szene hinzu
         this.scene.add(this.menuMesh);
 
+        // Zustand merken
+        this.menuVisible = true;
     }
+
 
     updateMenuCanvas() {
-        const ctx = this.menuCtx;
-        const canvas = this.menuCanvas;
+        const ctx = this.menuContext;
+        ctx.clearRect(0, 0, this.menuCanvas.width, this.menuCanvas.height);
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, this.menuCanvas.width, this.menuCanvas.height);
 
-        ctx.fillStyle = '#fff';
-        ctx.font = '28px sans-serif';
+        ctx.fillStyle = 'white';
+        ctx.font = '32px sans-serif';
         ctx.fillText('🚁 Helikopter-Menü', 20, 50);
-        ctx.font = '20px sans-serif';
-        ctx.fillText(`Throttle: ${this.throttle.toFixed(2)}`, 20, 100);
-        ctx.fillText(`Pitch: ${this.pitch.toFixed(2)}`, 20, 130);
-        ctx.fillText(`Roll: ${this.roll.toFixed(2)}`, 20, 160);
-        ctx.fillText(`Yaw: ${this.yaw.toFixed(2)}`, 20, 190);
-        
-        this.menuTexture.needsUpdate = true;
+
+        ctx.font = '24px sans-serif';
+        ctx.fillText('• Start', 20, 100);
+        ctx.fillText('• Landung', 20, 140);
+        ctx.fillText('• Reset', 20, 180);
+
+        // Textur aktualisieren
+        if (this.menuMesh) {
+            this.menuMesh.material.map.needsUpdate = true;
+        }
     }
+
 
 
     setEnvironment() {
@@ -184,7 +184,13 @@ class App {
         this.handelControllerInput();
         const dt = this.clock.getDelta();
 
-        if (this.menuVisible) this.updateMenuCanvas();
+        if (this.menuVisible) {
+            this.menuMesh.visible = true;
+            this.updateMenuCanvas();
+        } else {
+            this.menuMesh.visible = false;
+        }
+
         
         if (this.bell) {
             const maxAngularRate = Math.PI; // rad/s
